@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+</head>
+<body>
+<div id="svg-target"></div>
+
+<script type="text/javascript">
+
+const targetDiv = document.getElementById('svg-target');
+var xmlns = 'http://www.w3.org/2000/svg';
+const svgNode = document.createElementNS(xmlns, 'svg');
+svgNode.setAttributeNS(null, 'viewBox', '0 0 1000 1000');
+targetDiv.appendChild(svgNode);
+
+var black = "#000000FF";
+
+//                       Yellow       Blue         Orange       Green        Red           Purple       Clear
+var colours = new Array("#EEEE99AA", "#6699aaAA", "#eeAA33AA", "#55ee55AA", "#ee5555AA",  "#EE55DDAA", "#FFFFFF00");
+var defaultColour=0;
+var clearColour=6;
+currentColour=1;
+
+var dottedFrets = new Array(3, 5, 7, 9, 12, 15, 17);
+
+drawText("t1", "Guitar", 50, 75, 40, black, 0);
+drawText("t2", "Note Name", 50, 100, 23, black, 0);
+drawText("t3", "Scratch Paper", 50, 125, 18, black, 0);
+drawText("t4", "www.scottpauljohnson.com", 500, 850, 17, black, 0);
+
+//Draw colour pallet
+for(i=0; i<colours.length; i++){
+  drawCircle("p"+i, 60+(i*17),   150, 7, colours[i], "palletClicked", black);
+}
+
+drawText("t5", "All Notes:", 60, 175, 10, black, 0);
+drawCircle("t6", 120,   172, 5, colours[clearColour], "allNotesClicked", black);
+
+
+var eString = loadString("E");
+var aString = loadString("A");
+var dString = loadString("D");
+var gString = loadString("G");
+var bString = loadString("B");
+
+var notes = new Array();
+notes[0] = eString;
+notes[1] = aString;
+notes[2] = dString;
+notes[3] = gString;
+notes[4] = bString;
+notes[5] = eString;
+
+var stringCount = 6;
+var stringStep = 20;
+var fretStep = 30;
+var textSize = 17;
+
+
+//drawFretboard(1, 50, 50);
+drawFretboard(2, 250, 50, 6);
+drawFretboard(3, 450, 50, 6);
+drawFretboard(4, 650, 50, 6);
+drawFretboard(5, 50, 300, 18);
+drawFretboard(6, 250, 300, 18);
+drawFretboard(7, 450, 300, 18);
+drawFretboard(8, 650, 300, 18);
+
+palletClicked("p2");
+
+
+function loadString(startingNote){
+  var allNotes = new Array("A", "A&sharp;", "B", "C", "C&sharp;", "D", "D&sharp;", "E",  "F", "F&sharp;", "G", "G&sharp;");
+  var notes = new Array();  
+  var idx = allNotes.indexOf(startingNote);
+  for(var i=0; i<20; i++){
+     notes.push(allNotes[idx]);
+     idx++;
+     if(idx>allNotes.length-1){idx=0;}
+  }
+  return notes;
+}
+
+function drawFretboard(id, leftMargin, topMargin, fretCount){
+//♭ 266D
+//♯ 266f
+
+  //Draw strings
+  for (var i=0; i<stringCount; i++){
+     drawLine("string"+i+"-"+id, leftMargin+(i*stringStep), topMargin, leftMargin+(i*stringStep), (fretCount*fretStep)+topMargin-fretStep);
+  }
+
+  //Draw frets
+  for (var i=0; i<fretCount; i++){
+     drawLine("fret"+i+"-"+id, leftMargin, (i*fretStep)+topMargin, leftMargin+(5*stringStep), (i*fretStep)+topMargin);
+  }
+
+  //Draw dots & notes
+  for (var i=0; i<fretCount; i++){
+     for (var j=0; j<stringCount; j++){
+        var note = notes[j][i];
+        var colour=colours[0];
+        var txtSize = textSize;
+        var txtColour = black;
+        if (note==""){colour=colours[clearColour];}
+        if (note.indexOf("&sharp;") >= 0){
+          colour=colours[clearColour];
+          txtSize = textSize/1.2;
+          txtColour = colours[clearColour];
+        }
+
+
+        drawCircle("n"+id+"f"+i+"s"+j,      (j*stringStep)+leftMargin,       topMargin+(i*fretStep)-(fretStep/2), stringStep/2, colour, "noteClicked", colours[clearColour]);
+        drawText("n"+id+"f"+i+"s"+j, note , (j*stringStep)+(leftMargin)-(textSize/2.5),   (i*fretStep)+(fretStep/2)+(textSize/2.5)+topMargin-fretStep, txtSize, txtColour, 0);
+     }
+
+     if(dottedFrets.findIndex(val=>val==i) > -1){
+        drawText("n"+id+"fret"+i, i , (stringCount*stringStep)+(leftMargin),   (i*fretStep)+(fretStep/2)+(textSize/2.5)+topMargin-fretStep, txtSize, black, 0);
+     }
+  }
+
+  //Add label
+  txtSize = 10;
+  drawText("lf"+id, "f" , (stringCount*stringStep)+(leftMargin)+(textSize/4),   topMargin, txtSize, txtColour, 90);
+  drawText("lr"+id, "r" , (stringCount*stringStep)+(leftMargin)+(textSize/4),   topMargin+(textSize/3), txtSize, txtColour, 90);
+  drawText("le"+id, "e" , (stringCount*stringStep)+(leftMargin)+(textSize/4),   topMargin+(textSize*2/3), txtSize, txtColour, 90);
+  drawText("lt"+id, "t" , (stringCount*stringStep)+(leftMargin)+(textSize/4),   topMargin+(textSize)*3/3, txtSize, txtColour, 90);
+  drawText("ls"+id, "s" , (stringCount*stringStep)+(leftMargin)+(textSize/4),   topMargin+(textSize*4/3), txtSize, txtColour, 90);
+
+}
+
+
+function drawLine(id, x1, y1, x2, y2){
+  var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+  newLine.setAttribute('id','line-'+id);
+  newLine.setAttribute('x1',x1);
+  newLine.setAttribute('y1',y1);
+  newLine.setAttribute('x2',x2);
+  newLine.setAttribute('y2',y2);
+  newLine.setAttribute("stroke", "black")
+  svgNode.appendChild(newLine);
+}
+
+function drawRectangle(id, x, y, width, height, fill){
+  const rectNode = document.createElementNS(xmlns, 'rect');
+  rectNode.setAttributeNS(null, 'id','rect-'+id);
+  rectNode.setAttributeNS(null, 'x', x);
+  rectNode.setAttributeNS(null, 'y', y);
+  rectNode.setAttributeNS(null, 'width', width);
+  rectNode.setAttributeNS(null, 'height', height);
+  rectNode.setAttributeNS(null, 'fill', fill);
+  rectNode.setAttributeNS(null, 'onmouseover', "onmousover('"+id+"')");
+  rectNode.setAttributeNS(null, 'onmouseout', "onmousout('"+id+"')");
+  svgNode.appendChild(rectNode);
+}
+
+
+function drawCircle(id, x, y, radius, fill, onClickFn, stroke){
+  const circleNode = document.createElementNS(xmlns, 'circle');
+//  console.log("drawing=circle-"+id)
+  circleNode.setAttributeNS(null, 'id','circle-'+id);
+  circleNode.setAttributeNS(null, 'cx', x);
+  circleNode.setAttributeNS(null, 'cy', y);
+  circleNode.setAttributeNS(null, 'r', radius);
+  circleNode.setAttributeNS(null, 'fill', fill);
+  circleNode.setAttributeNS(null, 'stroke', stroke);
+  circleNode.setAttributeNS(null, 'onclick', onClickFn+"('"+id+"')");
+  svgNode.appendChild(circleNode);
+}
+
+function drawText(id, text, x, y, size, colour, rotate){
+  const textNode = document.createElementNS(xmlns, 'text');
+  textNode.setAttributeNS(null, 'id','text-'+id);
+  textNode.setAttributeNS(null, 'text', text);
+  textNode.setAttributeNS(null, 'x', x);
+  textNode.setAttributeNS(null, 'y', y);
+  textNode.setAttributeNS(null, 'font-size', size+"px");
+  textNode.setAttributeNS(null, 'fill', colour);
+  textNode.setAttributeNS(null, 'rotate', rotate);
+  svgNode.appendChild(textNode);
+  textNode.setAttributeNS(null, 'onclick', "noteClicked('"+id+"')");
+  document.getElementById("text-"+id).innerHTML=text;
+}
+
+function noteClicked(id){
+   var note = document.getElementById("text-"+id).getAttributeNS(null, 'text');
+   var colour = document.getElementById("circle-"+id).getAttributeNS(null, 'fill');
+   var colourIdx = colours.findIndex(val=>val==colour);
+
+//   console.log("colourIdx="+colourIdx+"    currentColour="+currentColour)
+
+
+   var colourToFill = currentColour;
+   if(currentColour == colourIdx){
+      if(note.indexOf("&sharp;") >= 0){
+         colourToFill = clearColour;
+      }else{
+         colourToFill = defaultColour;
+      }
+   }
+   document.getElementById("circle-"+id).setAttributeNS(null, 'fill', colours[colourToFill]);
+  
+
+   // Reveal/Hide sharp
+   if((note.indexOf("&sharp;") >= 0 && colourToFill==clearColour)){
+      document.getElementById("text-"+id).setAttributeNS(null, 'fill', "#FFFFFF00");
+   }else{
+      document.getElementById("text-"+id).setAttributeNS(null, 'fill', "#000000FF");
+   }
+
+
+   //Auto populate all notes
+   var allColour = document.getElementById("circle-t6").getAttributeNS(null, 'fill');
+
+   if(allColour==black){
+     var neck = id.substring(0,id.indexOf("f"));
+       for (var i=0; i<20; i++){
+         for (var j=0; j<6; j++){
+           if(document.getElementById("text-"+neck+"f"+i+"s"+j) != null){
+             var thisNote = document.getElementById("text-"+neck+"f"+i+"s"+j).getAttributeNS(null, 'text');
+
+             if(thisNote == note){
+                document.getElementById("circle-"+neck+"f"+i+"s"+j).setAttributeNS(null, 'fill', colours[colourToFill]);
+
+                // Reveal/Hide sharps
+                if((note.indexOf("&sharp;") >= 0 && colourToFill==clearColour)){
+                  document.getElementById("text-"+neck+"f"+i+"s"+j).setAttributeNS(null, 'fill', "#FFFFFF00");
+                }else{
+                   document.getElementById("text-"+neck+"f"+i+"s"+j).setAttributeNS(null, 'fill', "#000000FF");
+                }
+              }
+            }
+         }
+      } 
+   }
+}
+
+
+function palletClicked(id){
+   var palletColour = document.getElementById('circle-'+id).getAttributeNS(null, 'fill');
+   currentColour = colours.findIndex(val=>val==palletColour);
+
+   var indexPicked = id.substring(id.length-1)
+
+
+   for(var pallet=0; pallet<colours.length; pallet++)
+      if(pallet == indexPicked){
+         document.getElementById("circle-p"+pallet).setAttributeNS(null, 'stroke-width', "2.5");
+      }
+      else{
+         document.getElementById("circle-p"+pallet).setAttributeNS(null, 'stroke-width', "1");
+      }
+}
+
+function allNotesClicked(id){
+   var allColour = document.getElementById("circle-"+id).getAttributeNS(null, 'fill');
+   if(allColour == colours[clearColour]){
+      document.getElementById("circle-"+id).setAttributeNS(null, 'fill', black);
+   }else{
+      document.getElementById("circle-"+id).setAttributeNS(null, 'fill', colours[clearColour]);
+   }
+}
+
+
+
+</script>
+</body>
